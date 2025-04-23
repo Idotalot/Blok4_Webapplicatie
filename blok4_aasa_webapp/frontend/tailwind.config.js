@@ -3,7 +3,11 @@ module.exports = {
     "./src/**/*.{html,js,jsx,ts,tsx}", // Adjust paths if necessary
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sourcecode: ['"Source Code Pro"', 'monospace'],
+      },
+    },
   },
   plugins: [],
 }

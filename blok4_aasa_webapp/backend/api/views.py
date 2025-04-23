@@ -11,8 +11,8 @@ def hello_world(request):
 @api_view(['GET'])
 def test_1(request):
     return Response({
-        "message": "Schlaggot",
-        "count": 69
+        "message": "Ik ben hier veel te lang mee bezig geweest",
+        "count": "kill me pls"
     })
 
 # Create your views here.

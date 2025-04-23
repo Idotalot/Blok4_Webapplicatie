@@ -2,6 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import pymysql
+
+pymysql.install_as_MySQLdb()
 
 
 def main():
@@ -20,3 +23,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
