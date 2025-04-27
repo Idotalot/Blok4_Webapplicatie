@@ -7,33 +7,20 @@ const useDashboard = () => {
         count: null
     });
 
-    useEffect(() => {
-    axios.get("http://145.49.127.248:1880/groep10")
-        .then(response => {
-            setData({
-                message: response.data.message,
-                count: response.data.count,
-            });
-        })
-        .catch(err => {
-            console.log(err);
-            setData({
-                message: "Error fetching data",
-                count: null,
-            });
-        });
-    }, []);
-
 
     const [image, setImage] = useState('/images/background.png')
 
     useEffect(() => {
-        const randomNumber = Math.floor(Math.random() * 10) + 1;
+        const randomNumber = Math.floor(Math.random() * 20) + 1;
         console.log(randomNumber)
 
-        if (randomNumber == 7) {
+        if (randomNumber == 7 || randomNumber == 17) {
+            // setImage('/images/spacez.gif')
             setImage('/images/spacez.gif')
             console.log("Switched to lebron.jpg");
+        } else if (randomNumber == 9) {
+            setImage('/images/django.jpg')
+            console.log("Switched to Django")
         }
     }, [])
 
