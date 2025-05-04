@@ -1,8 +1,8 @@
 // components/ConsoleComponent.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createWebSocketConnection, sendMessage } from '../utils/websocketHandler';  // WebSocket functions
-import { sendApiData } from '../utils/apiHandler';  // API POST function
+import { createWebSocketConnection, sendMessage } from '../utils/websocketHandler';
+import { sendApiData } from '../utils/apiHandler';
 import createMessage from '../utils/logsHandler';
 
 const ConsoleComponent = () => {
@@ -16,20 +16,24 @@ const ConsoleComponent = () => {
     const url = 'ws://145.49.127.248:1880/ws/groep10'
     socketRef.current = createWebSocketConnection(url, 
       (message) => {
+        const response = createMessage(`LNDR`, `${message}`, "message")
         // Displayed Message
         setMessages((prevMessages) => [
           ...prevMessages, 
-          createMessage(`LNDR >> ${message}`, "message")
+          response
         ]);
+        sendApiData('http://localhost:8000/api/create_bericht/', response)
       }, 
       () => {
         console.log('WebSocket connected') 
       },
       (error) => {
+        const webSocketError = createMessage(`WebSocket`, `Could not connect with ${url}`, "error")
         setMessages((prevMessages) => [
           ...prevMessages,
-          createMessage(`WebSocket : Could not connect with ${url}`, "error")
+          webSocketError
         ]);
+        sendApiData('http://localhost:8000/api/create_bericht/', webSocketError)
       }, 
       () => {
         console.log('WebSocket disconnected')
@@ -49,12 +53,40 @@ const ConsoleComponent = () => {
   const handleKeyDown = (e) => {
       if (e.key === 'Enter') {
       // handleWebSocketSend();  // Send via WebSocket
+          const request = createMessage(`HSTN`, `${inputValue}`, "message")
+          console.log(request)
           setMessages((prevMessages) => [
-                ...prevMessages,
-              createMessage(`HSTN >> ${inputValue}`, "message")
-              ]);
+            ...prevMessages,
+            request
+          ]);
+          sendApiData('http://localhost:8000/api/create_bericht/', request)
 
-          handleApiSend();        // Send via API
+
+          if (inputValue.startsWith("run ") && inputValue.endsWith(".exe")) {
+            let program = inputValue.slice(4, -4)
+
+            let memePrograms = ["django", "trumpet", "catscream"]
+            let programList = ["cleanup"]
+            
+            if (memePrograms.includes(program) || programList.includes(program)) {
+              let response;
+              if (memePrograms.includes(program)) {
+                response = createMessage("SYSTM", `Running ${program}.exe...`, "special")
+                easterEgg(program);
+              } else {
+                response = createMessage("SYSTM", `Running ${program}.exe...`, "success")
+                messages.length = 0;
+              }
+
+              setMessages(prevMessages => [
+                ...prevMessages,
+                response
+              ]);
+              sendApiData('http://localhost:8000/api/create_bericht/', response)
+            }
+          } else {
+            handleApiSend()
+          }
 
           setInputValue(''); // Clear input field
       }
@@ -91,19 +123,47 @@ const ConsoleComponent = () => {
           console.log(response)
           setMessages((prevMessages) => [
               ...prevMessages,
-              createMessage(`LNDR >> ${response}`, "message")
+              createMessage(`LNDR`, `${response}`, "message")
           ]);
         },
         (error) => {
           console.error('Error sending POST request:', error) // Error handling
           setMessages((prevMessages) => [
             ...prevMessages,
-            createMessage('API : Failed to fetch request', "error")
+            createMessage('API', 'Failed to fetch request', "error")
           ]);
         }
       );
     }
   };
+
+  const easterEgg = (program) => {
+    const appContainer = document.getElementById("app-container");
+    const image = new Image();
+
+    image.onload = () => {
+      // Image exists, use jpg
+      appContainer.style.backgroundImage = `url("/images/${program}.jpg")`;
+      console.log("Loaded JPG successfully");
+    };
+    
+    image.onerror = () => {
+      // JPG not found, try GIF
+      appContainer.style.backgroundImage = `url("/images/${program}.gif")`;
+      console.log("JPG not found, loaded GIF instead");
+    };
+
+    const audio = new Audio(`/audio/${program}.mp3`);
+    audio.play();
+
+    audio.addEventListener('ended', () => {
+      appContainer.style.backgroundImage = 'url("/images/background.png")';
+    });
+
+    // Start loading the JPG
+    image.src = `/images/${program}.jpg`;
+};
+
 
   // HTML CODE
   return (
@@ -115,10 +175,11 @@ const ConsoleComponent = () => {
             success: "text-green-500",
             warning: "text-yellow-500",
             error: "text-red-500",
+            special: "text-purple-500"
           };
           return (
             <p key={index} className={`font-sourcecode  ${colorMap[message.type] || "text-white"}`}>
-              {`[${message.time}] `}{message.response}
+              {`[${message.verstuurTijd}] ${message.verstuurder} >> ${message.tekst}`}
             </p>
           );
         })}

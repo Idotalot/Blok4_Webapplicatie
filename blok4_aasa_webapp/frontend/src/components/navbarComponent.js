@@ -1,7 +1,7 @@
 // components/navbarComponent.js
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTableColumns, faRulerVertical, faBook } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faRulerVertical, faBook } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 
 const NavbarComponent = () => {
@@ -12,7 +12,7 @@ const NavbarComponent = () => {
                 <div className="lg:pb-4">
                     <Link to="/dashboard">
                         <button id='dashboardNav' className="flex flex-row h-16 w-16 text-center items-center justify-center p-4 rounded-full hover:bg-opacity-20 hover:bg-white">
-                            <FontAwesomeIcon icon={faTableColumns} className="text-3xl text-white" />
+                            <FontAwesomeIcon icon={faHouse} className="text-3xl text-white" />
                         </button>
                     </Link>
                 </div>
