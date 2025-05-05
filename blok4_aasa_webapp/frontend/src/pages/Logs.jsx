@@ -43,19 +43,27 @@ export default function Logs() {
                                         Geen logs gevonden...
                                     </div>
                                 )}
-                                {logs.map((log) => (
-                                    <div id={'log-'+log.berichtID} className="grid grid-flow-col grid-cols-6 hover:bg-[#7e93a8]">
-                                        <p className="col-span-1 flex items-center justify-center">
-                                            {log.verstuurDatum} | {log.verstuurTijd}
-                                        </p>
-                                        <p className="col-span-1 flex items-center justify-center">
-                                            {log.verstuurder}
-                                        </p>                        
-                                        <p className="col-span-4 flex items-center p-2 m-2 rounded-lg font-sourcecode bg-black">
-                                            {log.tekst}
-                                        </p>  
-                                    </div>
-                                ))}
+                                {logs.map((log) => {
+                                    const date = new Date(log.verstuurDatum)
+                                    const day = String(date.getDate()).padStart(2, '0');
+                                    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                    const year = date.getFullYear();
+                                    const formattedDate = `${day}-${month}-${year}`;
+
+                                    return (
+                                        <div key={'log-'+log.berichtID} id={'log-'+log.berichtID} className="grid grid-flow-col grid-cols-6 hover:bg-[#7e93a8]">
+                                            <p className="col-span-1 flex items-center justify-center">
+                                                {formattedDate} | {log.verstuurTijd} {console.log(log.verstuurDatum)}
+                                            </p>
+                                            <p className="col-span-1 flex items-center justify-center">
+                                                {log.verstuurder}
+                                            </p>                        
+                                            <p className="col-span-4 flex items-center p-2 m-2 rounded-lg font-sourcecode bg-black">
+                                                {log.tekst}
+                                            </p>  
+                                        </div>
+                                    );
+                                })}
                             </div>
                             <div id="tableFooter" className="w-full h-16 border-t-2 lg:bg-[#060c1c] lg:rounded-b-2xl lg:opacity-85 lg:max-w-[90rem]">
 

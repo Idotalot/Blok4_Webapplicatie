@@ -17,6 +17,7 @@ export const sendApiData = async (url, data, onSuccess, onError) => {
         throw new Error(`Error: ${response.statusText}`);
       }
   
+      // Wait for responseData
       const responseData = await response.json();
       onSuccess(responseData);
     } catch (error) {

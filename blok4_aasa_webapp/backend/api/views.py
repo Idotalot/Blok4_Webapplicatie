@@ -26,19 +26,28 @@ def test_1(request):
 
 @api_view(['POST'])
 def create_bericht(request):
-    if request.method == 'POST':
-        print(request.data)
-          # Clean up old berichten before creating new one
-        cutoff = timezone.now() - timedelta(hours=24)
-        # Delete messages where the date is older than the cutoff
-        Berichten.objects.filter(verstuurDatum__lt=cutoff.date()).delete()
+    print(request.data)
 
-        serializer = BerichtenSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+    # Clean up old berichten before creating new one
+    # cutoff = timezone.now() - timedelta(hours=1)
+    # # Delete messages where the datetime is older than the cutoff
+    # Berichten.objects.filter(verstuurDatum__lt=cutoff).delete()
+
+    serializer = BerichtenSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class BerichtenListView(generics.ListAPIView):
-    queryset = Berichten.objects.all().order_by('-berichtID')  # latest first
     serializer_class = BerichtenSerializer
+
+    def get_queryset(self):
+
+        # Cutoff tijd instellen naar 1 uur geleden
+        cutoff = timezone.localtime(timezone.now()) - timedelta(hours=1)
+        print(f"cutoff: {cutoff}")
+
+        deleted_count, _ = Berichten.objects.filter(verstuurTijd__lt=cutoff).delete()
+        print(f"Deleted {deleted_count} old berichten.")
+        return Berichten.objects.all().order_by('-berichtID')

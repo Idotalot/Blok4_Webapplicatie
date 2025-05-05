@@ -16,10 +16,14 @@ export default function createMessage(messageSender, message, messageType) {
     console.log(currentTime);
 
     const newMessage = {
-        verstuurder: messageSender,  // Sending message sender
-        tekst: message,              // Sending message content
-        verstuurDatum: formattedDate,  // Date of message
-        verstuurTijd: formattedTime   // Time of message
+        info: {
+            verstuurder: messageSender,  // Sending message sender
+            tekst: message,              // Sending message content
+            verstuurDatum: formattedDate,  // Date of message
+            verstuurTijd: formattedTime   // Time of message
+        },
+        type: messageType
+        
     };
 
     return newMessage;

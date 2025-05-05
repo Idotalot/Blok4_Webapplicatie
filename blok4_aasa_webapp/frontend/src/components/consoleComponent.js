@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createWebSocketConnection, sendMessage } from '../utils/websocketHandler';
 import { sendApiData } from '../utils/apiHandler';
 import createMessage from '../utils/logsHandler';
+import { SlotmachineComponent, generateSlotmachine } from './slotmachineComponent';
 
 const ConsoleComponent = () => {
   const [messages, setMessages] = useState([]);   // Store WebSocket and API messages
   const [inputValue, setInputValue] = useState(''); // Store input value
+  const [showSlotMachine, setShowSlotMachine] = useState('')
   const socketRef = useRef(null);                   // WebSocket reference
 
   // Initialize WebSocket connection when the component mounts
@@ -15,25 +17,23 @@ const ConsoleComponent = () => {
     // WebSocket connection
     const url = 'ws://145.49.127.248:1880/ws/groep10'
     socketRef.current = createWebSocketConnection(url, 
-      (message) => {
-        const response = createMessage(`LNDR`, `${message}`, "message")
-        // Displayed Message
-        setMessages((prevMessages) => [
-          ...prevMessages, 
-          response
-        ]);
-        sendApiData('http://localhost:8000/api/create_bericht/', response)
+      (message) => {       
+        handleNewLog(
+          `LNDR`, 
+          `${message}`, 
+          "message"
+        )
       }, 
       () => {
         console.log('WebSocket connected') 
       },
       (error) => {
-        const webSocketError = createMessage(`WebSocket`, `Could not connect with ${url}`, "error")
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          webSocketError
-        ]);
-        sendApiData('http://localhost:8000/api/create_bericht/', webSocketError)
+        // Handle new Log
+        handleNewLog(
+          `WebSocket`, 
+          `Could not connect with ${url}`, 
+          "error"
+        )
       }, 
       () => {
         console.log('WebSocket disconnected')
@@ -53,36 +53,47 @@ const ConsoleComponent = () => {
   const handleKeyDown = (e) => {
       if (e.key === 'Enter') {
       // handleWebSocketSend();  // Send via WebSocket
-          const request = createMessage(`HSTN`, `${inputValue}`, "message")
-          console.log(request)
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            request
-          ]);
-          sendApiData('http://localhost:8000/api/create_bericht/', request)
+          // const request = createMessage(`HSTN`, `${inputValue}`, "message")
+          // console.log(request)
+          // setMessages((prevMessages) => [
+          //   ...prevMessages,
+          //   request
+          // ]);
+          // sendApiData('http://localhost:8000/api/create_bericht/', request)
+          handleNewLog(`HSTN`, `${inputValue}`, "message")
 
 
           if (inputValue.startsWith("run ") && inputValue.endsWith(".exe")) {
             let program = inputValue.slice(4, -4)
 
-            let memePrograms = ["django", "trumpet", "catscream"]
-            let programList = ["cleanup"]
+            let memePrograms = ["django", "trumpet", "catscream", "focus"]
+            let programList = ["cleanup", "slotmachine"]
             
             if (memePrograms.includes(program) || programList.includes(program)) {
-              let response;
+              let newMessage;
               if (memePrograms.includes(program)) {
-                response = createMessage("SYSTM", `Running ${program}.exe...`, "special")
+                // newMessage = createMessage("SYSTM", `Running ${program}.exe...`, "special")
+                handleNewLog("SYSTM", `Running ${program}.exe...`, "special")
                 easterEgg(program);
-              } else {
-                response = createMessage("SYSTM", `Running ${program}.exe...`, "success")
-                messages.length = 0;
+              } else if (programList.includes(program)) {
+                if (program === "slotmachine") {
+                  // generateSlotmachine();
+                  document.getElementById("slotmachine-modal").classList.remove("hidden");
+                  document.getElementById("slotmachine").classList.remove("hidden");
+                } else {
+                  messages.length = 0;
+                }
+                // newMessage = createMessage("SYSTM", `Running ${program}.exe...`, "success")
+                handleNewLog("SYSTM", `Running ${program}.exe...`, "success")
               }
 
-              setMessages(prevMessages => [
-                ...prevMessages,
-                response
-              ]);
-              sendApiData('http://localhost:8000/api/create_bericht/', response)
+              // setMessages(prevMessages => [
+              //   ...prevMessages,
+              //   newMessage
+              // ]);
+              // // ADD MESSAGE TO LOGS
+              // sendApiData('http://localhost:8000/api/create_bericht/', newMessage)
+
             }
           } else {
             handleApiSend()
@@ -121,21 +132,41 @@ const ConsoleComponent = () => {
         (response) => {
           // On success, display message in UI and clear input field
           console.log(response)
-          setMessages((prevMessages) => [
-              ...prevMessages,
-              createMessage(`LNDR`, `${response}`, "message")
-          ]);
+          // setMessages((prevMessages) => [
+          //     ...prevMessages,
+          //     createMessage(`LNDR`, `${response}`, "message")
+          // ]);
+
+          handleNewLog(`LNDR`, `${response}`, "message")
         },
         (error) => {
           console.error('Error sending POST request:', error) // Error handling
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            createMessage('API', 'Failed to fetch request', "error")
-          ]);
+          // setMessages((prevMessages) => [
+          //   ...prevMessages,
+          //   createMessage()
+          // ]);
+
+          handleNewLog('API', 'Failed to send POST request', "error")
         }
       );
     }
   };
+
+  const handleNewLog = (sender, message, type) => {
+    // Maak JSON op basis van verstuurder, bericht en type
+    const request = createMessage(sender, message, type)
+
+    // Voeg bericht toe aan berichten lijst om lijst te updaten
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      request
+    ]);
+
+    console.log(messages)
+
+    // Voeg bericht toe aan database
+    sendApiData('http://localhost:8000/api/create_bericht/', request.info)
+  }
 
   const easterEgg = (program) => {
     const appContainer = document.getElementById("app-container");
@@ -179,7 +210,7 @@ const ConsoleComponent = () => {
           };
           return (
             <p key={index} className={`font-sourcecode  ${colorMap[message.type] || "text-white"}`}>
-              {`[${message.verstuurTijd}] ${message.verstuurder} >> ${message.tekst}`}
+              {`[${message.info.verstuurTijd}] ${message.info.verstuurder} >> ${message.info.tekst}`}
             </p>
           );
         })}
