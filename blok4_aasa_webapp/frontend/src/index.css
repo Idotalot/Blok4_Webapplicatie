@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Firefox-specific */
+#tableBody #console-panel {
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff transparent;
+}
+  
+  /* Webkit browsers (Chrome, Edge, Safari) */
+#tableBody::-webkit-scrollbar {
+    width: 8px;
+}
+  
+#tableBody::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#console-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#tableBody::-webkit-scrollbar-thumb {
+    background-color: #6b7280;
+}
+
+#console-panel::-webkit-scrollbar-thumb {
+    background-color: #6b7280;
+}

@@ -16,7 +16,17 @@ export default function usePageTitle() {
     let pageHeader = document.getElementById("title")
     pageHeader.innerText = pageTitle
 
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    let imageUrl = "/images/AASA_Black_Background.png"
+    link.href = imageUrl;
+
     let locationButton = document.getElementById(path + "Nav")
     locationButton.classList.add("bg-white", "bg-opacity-20")
+
   }, [location]);
 }

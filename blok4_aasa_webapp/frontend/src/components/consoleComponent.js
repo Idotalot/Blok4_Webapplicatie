@@ -1,185 +1,137 @@
-// components/ConsoleComponent.js
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { createWebSocketConnection, sendMessage } from '../utils/websocketHandler';
 import { sendApiData } from '../utils/apiHandler';
 import createMessage from '../utils/logsHandler';
-import { SlotmachineComponent, generateSlotmachine } from './slotmachineComponent';
+import { faCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-const ConsoleComponent = () => {
+const ConsoleComponent = forwardRef((props, ref) => {
   const [messages, setMessages] = useState([]);   // Store WebSocket and API messages
   const [inputValue, setInputValue] = useState(''); // Store input value
-  const [showSlotMachine, setShowSlotMachine] = useState('')
   const socketRef = useRef(null);                   // WebSocket reference
+  const [wsStatus, changeWsStatus] = useState('disconnected');
 
-  // Initialize WebSocket connection when the component mounts
-  useEffect(() => {
-    // WebSocket connection
-    const url = 'ws://145.49.127.248:1880/ws/groep10'
-    socketRef.current = createWebSocketConnection(url, 
-      (message) => {       
-        handleNewLog(
-          `LNDR`, 
-          `${message}`, 
-          "message"
-        )
-      }, 
-      () => {
-        console.log('WebSocket connected') 
-      },
-      (error) => {
-        // Handle new Log
-        handleNewLog(
-          `WebSocket`, 
-          `Could not connect with ${url}`, 
-          "error"
-        )
-      }, 
-      () => {
-        console.log('WebSocket disconnected')
-      }
-    );
+  useImperativeHandle(ref, () => ({
+    addLog(sender, message, type) {
+      handleNewLog(
+        sender,
+        message,
+        type
+      )
+    },
 
-    // Cleanup WebSocket connection when the component unmounts
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
-      }
-    };
-  }, []); // Empty dependency array ensures this runs once when the component mounts
-
+    setWsStatus(status) {
+      changeWsStatus(status)
+    }
+  }));
 
   const handleKeyDown = (e) => {
       if (e.key === 'Enter') {
-      // handleWebSocketSend();  // Send via WebSocket
-          // const request = createMessage(`HSTN`, `${inputValue}`, "message")
-          // console.log(request)
-          // setMessages((prevMessages) => [
-          //   ...prevMessages,
-          //   request
-          // ]);
-          // sendApiData('http://localhost:8000/api/create_bericht/', request)
-          handleNewLog(`HSTN`, `${inputValue}`, "message")
+          handleNewLog(`Houston`, `${inputValue}`, "message");
 
+          if (inputValue.startsWith("run ")) {
+            let program = inputValue.slice(4);
 
-          if (inputValue.startsWith("run ") && inputValue.endsWith(".exe")) {
-            let program = inputValue.slice(4, -4)
+            // Programma lijst
+            let memePrograms = ["django", "trumpet", "catscream", "focus"];
+            let programList = ["cleanup", "slotmachine", "help", "plant-flag"];
 
-            let memePrograms = ["django", "trumpet", "catscream", "focus"]
-            let programList = ["cleanup", "slotmachine"]
-            
+            // Programma handling
             if (memePrograms.includes(program) || programList.includes(program)) {
-              let newMessage;
               if (memePrograms.includes(program)) {
-                // newMessage = createMessage("SYSTM", `Running ${program}.exe...`, "special")
-                handleNewLog("SYSTM", `Running ${program}.exe...`, "special")
+                handleNewLog("System", `Running ${program}`, "special");
                 easterEgg(program);
               } else if (programList.includes(program)) {
-                if (program === "slotmachine") {
-                  // generateSlotmachine();
-                  document.getElementById("slotmachine-modal").classList.remove("hidden");
-                  document.getElementById("slotmachine").classList.remove("hidden");
-                } else {
-                  messages.length = 0;
+                switch (program) {
+                  case "slotmachine":
+                    document.getElementById("slotmachine-modal").classList.remove("hidden");
+                    document.getElementById("slotmachine").classList.remove("hidden");
+                    break;
+                  case "cleanup":
+                    messages.length = 0
+                    break;
+                  case "help":
+                    handleNewLog('', '', 'invalid')
+                    handleNewLog('List Of Programs', '', 'invalid')
+                    programList.forEach(program => {
+                      handleNewLog('==', program, 'invalid' )
+                    })
+                    memePrograms.forEach(program => {
+                      handleNewLog('==', program, 'invalid' )
+                    });
+                    break;
+                  case "plant-flag":
+                    handleApiSend();
+                    break;
+                  default:
+                    break;
                 }
-                // newMessage = createMessage("SYSTM", `Running ${program}.exe...`, "success")
-                handleNewLog("SYSTM", `Running ${program}.exe...`, "success")
+                
+                handleNewLog("System", `Running ${program}`, "success");
               }
-
-              // setMessages(prevMessages => [
-              //   ...prevMessages,
-              //   newMessage
-              // ]);
-              // // ADD MESSAGE TO LOGS
-              // sendApiData('http://localhost:8000/api/create_bericht/', newMessage)
-
+            } else {
+              handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
             }
           } else {
-            handleApiSend()
+            handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
           }
 
           setInputValue(''); // Clear input field
       }
   };
 
-  // Handle user input changes
   const handleInputChange = (e) => {
-    // Input veranderen per wijziging
-    setInputValue(e.target.value);
+    setInputValue(e.target.value); // Update input value
   };
 
   const bottomRef = useRef(null);
 
-  // Automatisch naarbeneden scrollen in console
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Handle sending data to the REST API (POST request)
   const handleApiSend = () => {
     if (inputValue.trim()) {
-      // Input ophalen vanuit command prompt
       const url = `http://145.49.127.248:1880/groep10?${inputValue}`;
-
-      // Prepare data for the POST request (empty as data is in the URL)
-      const data = {};
-
-      // Use the sendApiData function (which performs the POST request)
+      const data = {}; // Data is passed via URL query parameters
       sendApiData(url, data,
         (response) => {
-          // On success, display message in UI and clear input field
-          console.log(response)
-          // setMessages((prevMessages) => [
-          //     ...prevMessages,
-          //     createMessage(`LNDR`, `${response}`, "message")
-          // ]);
-
-          handleNewLog(`LNDR`, `${response}`, "message")
+          console.log(response);
+          handleNewLog(
+            `Satelliet`,
+            `${response.status}`, 
+            "success"
+          );
         },
         (error) => {
-          console.error('Error sending POST request:', error) // Error handling
-          // setMessages((prevMessages) => [
-          //   ...prevMessages,
-          //   createMessage()
-          // ]);
-
-          handleNewLog('API', 'Failed to send POST request', "error")
+          console.error('Error sending POST request:', error);
+          handleNewLog('API', 'Failed to send POST request', "error");
         }
       );
     }
   };
 
   const handleNewLog = (sender, message, type) => {
-    // Maak JSON op basis van verstuurder, bericht en type
-    const request = createMessage(sender, message, type)
+    const request = createMessage(sender, message, type);
+    setMessages((prevMessages) => [...prevMessages, request]);
 
-    // Voeg bericht toe aan berichten lijst om lijst te updaten
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      request
-    ]);
-
-    console.log(messages)
-
-    // Voeg bericht toe aan database
-    sendApiData('http://localhost:8000/api/create_bericht/', request.info)
-  }
+    if (type != "invalid") {
+      sendApiData('http://localhost:8000/api/create_bericht/', request.info);
+    }
+  };
 
   const easterEgg = (program) => {
     const appContainer = document.getElementById("app-container");
     const image = new Image();
 
     image.onload = () => {
-      // Image exists, use jpg
       appContainer.style.backgroundImage = `url("/images/${program}.jpg")`;
       console.log("Loaded JPG successfully");
     };
-    
+
     image.onerror = () => {
-      // JPG not found, try GIF
       appContainer.style.backgroundImage = `url("/images/${program}.gif")`;
       console.log("JPG not found, loaded GIF instead");
     };
@@ -191,16 +143,23 @@ const ConsoleComponent = () => {
       appContainer.style.backgroundImage = 'url("/images/background.png")';
     });
 
-    // Start loading the JPG
     image.src = `/images/${program}.jpg`;
-};
+  };
 
-
-  // HTML CODE
   return (
     <div id="console-container" className="flex flex-col h-full scrollbar w-full lg:w-[40rem]">
-      <div id="console-panel" className="bg-black flex-1 p-4 rounded-t-2xl lg:rounded-2xl overflow-auto lg:opacity-80 font-sourcecode">
-        {/* Display all messages */}
+      <div className='flex flex-row p-4 rounded-t-2xl lg:rounded-2xl overflow-auto lg:bg-[rgba(6,12,28,0.85)] font-sourcecode mb-3'>
+        <FontAwesomeIcon 
+          icon={faCircle} 
+          id='wsStatusBubble' 
+          className={`text-3xl animate-pulse ${wsStatus === 'success' ? 'text-green-600' : wsStatus === 'error' ? 'text-red-600' : wsStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'}`}
+        />
+        <p className='ml-3 text-white'>
+          {wsStatus === 'success' ? 'Connected' : wsStatus === 'error' ? 'Not Connected' : 'Not Connected'}
+        </p>
+      </div>
+
+      <div id="console-panel" className="bg-black flex-1 p-4 rounded-t-2xl lg:rounded-2xl overflow-auto lg:opacity-80 font-sourcecode" style={{scrollbarColor: "#ffffff00"}}>
         {messages.map((message, index) => {
           const colorMap = {
             success: "text-green-500",
@@ -214,9 +173,7 @@ const ConsoleComponent = () => {
             </p>
           );
         })}
-        {/* dummy div voor auto-scroll */}
         <div ref={bottomRef}></div>
-        {/* Input field for user to enter message */}
         <div className="flex flex-row">
           <p className="text-white font-sourcecode w-24">{"HSTN >>"}</p>
           <input
@@ -224,13 +181,13 @@ const ConsoleComponent = () => {
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            onKeyDown={handleKeyDown}  // Handle key press (Enter key)
+            onKeyDown={handleKeyDown}
             className="bg-black pl-2 w-full rounded-xl text-white font-sourcecode focus:outline-none focus:ring-0 focus:border-transparent"
           />
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default ConsoleComponent;

@@ -14,13 +14,10 @@ const useDashboard = () => {
         const randomNumber = Math.floor(Math.random() * 20) + 1;
         console.log(randomNumber)
 
-        if (randomNumber == 7 || randomNumber == 17) {
+        if (randomNumber == 7) {
             // setImage('/images/spacez.gif')
             setImage('/images/spacez.gif')
             console.log("Switched to lebron.jpg");
-        } else if (randomNumber == 9) {
-            setImage('/images/django.jpg')
-            console.log("Switched to Django")
         }
     }, [])
 

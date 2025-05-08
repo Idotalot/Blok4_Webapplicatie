@@ -1,4 +1,4 @@
-export default function createMessage(messageSender, message, messageType) {
+export default function createMeasurement(measurement) {
     const currentDate = new Date();
     
     const day = String(currentDate.getDate()).padStart(2, '0');
@@ -12,18 +12,13 @@ export default function createMessage(messageSender, message, messageType) {
     const formattedDate = `${year}-${month}-${day}`;
     const formattedTime = `${hours}:${minutes}:${seconds}`;
 
-    const currentTime = `${formattedDate} | ${formattedTime}`;
-
-    const newMessage = {
+    const newMeasurement = {
         info: {
-            verstuurder: messageSender,  // Sending message sender
-            tekst: message,              // Sending message content
-            verstuurDatum: formattedDate,  // Date of message
-            verstuurTijd: formattedTime   // Time of message
-        },
-        type: messageType
-        
+            afstand: 18,             // Sending message content
+            meetDatum: formattedDate,  // Date of message
+            meetTijd: formattedTime   // Time of message
+        }        
     };
 
-    return newMessage;
+    return newMeasurement;
 }

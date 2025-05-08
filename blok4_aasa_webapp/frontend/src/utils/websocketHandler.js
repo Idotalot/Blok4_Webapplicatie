@@ -1,8 +1,8 @@
 // websocket.js
 
-export const createWebSocketConnection = (url, onMessage, onOpen, onError, onClose) => {
-    const socket = new WebSocket(url);
-  
+export const createWebSocketConnection = (onMessage, onOpen, onError, onClose) => {
+    const socket = new WebSocket('ws://145.49.127.248:1880/ws/groep10');
+    
     socket.onopen = () => {
       console.log('WebSocket connected');
       if (onOpen) onOpen();
