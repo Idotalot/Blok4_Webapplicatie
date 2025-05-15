@@ -26,22 +26,24 @@ export default function Dashboard() {
         consoleRef.current?.addLog('System', 'Attempting to connect with WebSocket', 'warning');
         let connectionFailed = false
 
+        // const url = 'ws://145.49.127.248:1880/ws/groep10'
         // Poging doen tot het verbinden met de websocket
         socketRef.current = createWebSocketConnection(
-          (message) => {            
-            consoleRef.current?.addLog('Lander', message, 'message');
-            
-            let measurement = message.meting_1
+          (message) => {
+            let measurement = parseFloat(message.proximity_2 / 10).toFixed(2);
+            consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
+            console.log(message)
+
             // VERWACHTE RESULTAAT
             const formattedMeasurement = createMeasurement(measurement)
             sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
 
-            chartRef.current?.addMeasurements(measurements)
+            chartRef.current?.addMeasurements(measurement)
           },
           () => {
             console.log('WebSocket connected');
             consoleRef.current?.addLog('WebSocket', `Connection succesful`, 'success');
-            consoleRef.current?.setWsStatus('succes');
+            consoleRef.current?.setWsStatus('success');
           },
           (error) => {
             const url = 'ws://145.49.127.248:1880/ws/groep10'
@@ -79,6 +81,30 @@ export default function Dashboard() {
         }
     }
 
+    function plantFlag() {
+        consoleRef.current?.addLog('Houston', 'run plant-flag', 'message')
+
+        const url = `http://145.49.127.248:1880/groep10?digital_output_1=255`;
+        const data = {}; // Data is passed via URL query parameters
+
+        consoleRef.current?.addLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning')
+
+        sendApiData(url, data,
+            (response) => {
+                console.log(response);
+                consoleRef.current?.addLog(
+                `Satelliet`,
+                `${response.status}`, 
+                "success"
+                );
+            },
+            (error) => {
+                console.error('Error sending POST request:', error);
+                consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
+            }
+        );
+    }
+
     return (
         <div
             style={{
@@ -91,7 +117,7 @@ export default function Dashboard() {
 
             <div
                 id="app-container"
-                className="h-screen bg-center bg-cover flex flex-col lg:flex-row bg-white lg:overflow-hidden"
+                className="min-h-screen bg-center bg-cover flex flex-col lg:flex-row bg-white lg:overflow-hidden"
                 style={{
                     backgroundImage: `url(${image})`,
                     backgroundSize: image === '/images/spacez.gif' ? 'contain' : 'cover',
@@ -108,29 +134,24 @@ export default function Dashboard() {
 
                     <div
                         id="dashboard"
-                        className="flex-1 bg-center flex items-center justify-center lg:m-32"
-                        style={{ height: "32rem" }}
+                        className="flex-1 bg-center flex items-center justify-center min-h-[24rem] lg:m-32"
                     >
                         <div className="h-full flex flex-col lg:flex-row items-center justify-center lg:max-h-[600px] w-full">
                             <div
                                 id="function-panel"
                                 className="flex flex-col justify-between h-[80vh] lg:h-full w-full lg:flex-1 lg:mr-3 lg:max-w-[50rem]"
                             >
-                                <div className="min-h-[16rem] flex flex-1 items-center justify-center lg:bg-[#060c1c] opacity-85 lg:rounded-2xl lg:mb-3">
+                                <div className="min-h-[18rem] flex flex-1 items-center justify-center lg:bg-[#060c1c] opacity-85 lg:rounded-2xl lg:mb-3">
                                     <ChartComponent
                                         ref={chartRef}
                                     />
                                 </div>
 
-                                <div className="h-32 flex lg:flex-row items-center justify-center bg-transparent lg:bg-[#060c1c] lg:opacity-85 lg:rounded-2xl">
-                                    <button
-                                        onClick={getRecentMeasurements}  // Call the handler function here
-                                        className="p-2 rounded-lg w-max ml-2 mr-2 font-bold text-xl text-white"
-                                        style={{ backgroundColor: "#c6002a" }}
+                                <div className="h-24 flex lg:flex-row items-center justify-center bg-transparent lg:bg-[#060c1c] lg:opacity-85 lg:rounded-2xl">
+                                    <button 
+                                        onClick={plantFlag} 
+                                        className="p-2 rounded-lg w-max mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
                                     >
-                                        Metingen uitvoeren
-                                    </button>
-                                    <button className="p-2 rounded-lg w-max mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}>
                                         Vlag Planten
                                     </button>
                                 </div>

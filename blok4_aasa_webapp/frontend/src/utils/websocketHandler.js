@@ -9,7 +9,12 @@ export const createWebSocketConnection = (onMessage, onOpen, onError, onClose) =
     };
   
     socket.onmessage = (event) => {
-      if (onMessage) onMessage(event.data);
+      try {
+        const parsedData = JSON.parse(event.data);
+        if (onMessage) onMessage(parsedData);
+      } catch (e) {
+        console.error('Failed to parse WebSocket message:', e);
+      }
     };
   
     socket.onerror = (error) => {
@@ -28,6 +33,7 @@ export const createWebSocketConnection = (onMessage, onOpen, onError, onClose) =
   export const sendMessage = (socket, message) => {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(message);
+      console.log("sdsad")
     } else {
       console.warn('WebSocket is not open');
     }

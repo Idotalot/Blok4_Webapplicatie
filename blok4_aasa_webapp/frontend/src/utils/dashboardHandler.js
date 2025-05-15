@@ -17,7 +17,6 @@ const useDashboard = () => {
         if (randomNumber == 7) {
             // setImage('/images/spacez.gif')
             setImage('/images/spacez.gif')
-            console.log("Switched to lebron.jpg");
         }
     }, [])
 

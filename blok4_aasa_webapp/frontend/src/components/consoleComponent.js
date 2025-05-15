@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { createWebSocketConnection, sendMessage } from '../utils/websocketHandler';
 import { sendApiData } from '../utils/apiHandler';
 import createMessage from '../utils/logsHandler';
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
@@ -61,6 +60,7 @@ const ConsoleComponent = forwardRef((props, ref) => {
                     });
                     break;
                   case "plant-flag":
+                    handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
                     handleApiSend();
                     break;
                   default:
@@ -72,6 +72,11 @@ const ConsoleComponent = forwardRef((props, ref) => {
             } else {
               handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
             }
+          } else if (inputValue.startsWith('post ')) {
+            const postRequest = inputValue.slice(5);
+            const url = `http://145.49.127.248:1880/groep10?${postRequest}`;
+            handleApiSend(url)
+
           } else {
             handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
           }
@@ -92,9 +97,8 @@ const ConsoleComponent = forwardRef((props, ref) => {
     }
   }, [messages]);
 
-  const handleApiSend = () => {
+  const handleApiSend = (url) => {
     if (inputValue.trim()) {
-      const url = `http://145.49.127.248:1880/groep10?${inputValue}`;
       const data = {}; // Data is passed via URL query parameters
       sendApiData(url, data,
         (response) => {

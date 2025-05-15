@@ -14,7 +14,7 @@ export default function createMeasurement(measurement) {
 
     const newMeasurement = {
         info: {
-            afstand: 18,             // Sending message content
+            afstand: measurement,             // Sending message content
             meetDatum: formattedDate,  // Date of message
             meetTijd: formattedTime   // Time of message
         }        

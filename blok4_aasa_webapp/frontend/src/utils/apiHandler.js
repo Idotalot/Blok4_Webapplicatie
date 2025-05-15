@@ -9,9 +9,6 @@ export const sendApiData = async (url, data, onSuccess, onError) => {
         },
         body: JSON.stringify(data),
       });
-  
-      console.log(url)
-      console.log(JSON.stringify(data))
 
       if (!response.ok) {
         throw new Error(`Error: ${response.statusText}`);

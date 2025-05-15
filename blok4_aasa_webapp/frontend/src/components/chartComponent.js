@@ -1,111 +1,143 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react';
 import { Chart, registerables } from 'chart.js';
-import { data } from 'react-router-dom';
 
-Chart.register(...registerables)
+Chart.register(...registerables);
 
 const ChartComponent = forwardRef((props, ref) => {
   const canvasRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const [chartData, setChartData] = useState([]);
-  const fakeData = [1, 32, 23, 18, 9]
+  const [averageMeasurement, setAverage] = useState();
 
-    useImperativeHandle(ref, () => ({
-      addMeasurements(newMeasurement) {
-        console.log('Adding measurements to chart:', newMeasurement);
+  // Expose functions to parent via ref
+  useImperativeHandle(ref, () => ({
+    addMeasurements(newMeasurement) {
+      setChartData(prev => [...prev, newMeasurement]);
+    },
+    getAverage() {
+      return averageMeasurement
+    }
+  }));
 
-        // Keep only the last 5 (or however many you want)
-        setChartData((prevMeasurements) => [...prevMeasurements, newMeasurement.afstand]);
-        console.log("chartData:" + chartData)
-      },
-
-      showLatestResults() {
-        let result = true
-        if (chartInstanceRef.current) {
-
-          // Check of chartData 5 of meer waardes heeft
-          if (chartData.length >= 5) {
-            // Haal de meest recente waardes op
-            const recentResults = chartData.slice(0, 5);
-            recentResults.forEach((result, i) => {
-              // Voeg elke meting toe aan de chart met de bijbehorende label
-              chartInstanceRef.current.data.datasets[0].data[i] = result;
-              chartInstanceRef.current.data.labels[i] = `Meting ${i + 1}`;
-            });
-
-            chartInstanceRef.current.update();
-
-            result = true
-          } else {
-            console.log("Niet genoeg data...")
-            chartData.forEach(data => {
-              console.log(chartData[data] + ": " + data)
-            });
-            
-            result = false
-          }  
-        }
-
-        return result
-      }
-    
-    }));
-
+  // Fetch initial data
   useEffect(() => {
     fetch('http://localhost:8000/api/metingen/')
       .then(response => response.json())
-      .then(data => setChartData(data.map(item => item.afstand)))
-      .catch(error => console.error('Error fetching messages:', error));
+      .then(data => {
+        console.log(data)
+        const initialData = data.map(item => item.afstand).slice(0,5);
+        setChartData(initialData);
 
-    console.log(chartData)
+        // If chart is already initialized, update it
+        if (chartInstanceRef.current) {
+          chartInstanceRef.current.data.datasets[0].data = initialData.reverse();
+          chartInstanceRef.current.data.labels = initialData.map((_, i) => `Meting ${i + 1}`);
+          chartInstanceRef.current.update();
+        }
+      })
+      .catch(error => console.error('Error fetching measurements:', error));
+  }, []);
 
-    // Ensure the canvas is available before creating the chart
-    const ctx = canvasRef.current.getContext('2d');
+  // Update chart when chartData changes
+  useEffect(() => {
+    if (chartData.length === 0) return;
 
-    // Create a new Chart.js instance
-    chartInstanceRef.current = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Meting 1', 'Meting 2', 'Meting 3', 'Meting 4', 'Meting 5'],
-        datasets: [{
-          label: 'Meting',
-          data: null,
-          borderWidth: 1
-        }]
-      },
-      options: {
-        scales: {
-          y: {
-            title: { display: true, text: 'Hoogte (CM)' },
-            grid: {
-              color: 'grey'
+    const newestMeasurements = chartData.slice(-5);
+    console.log('Updating chartData:', newestMeasurements);
+
+    if (chartInstanceRef.current) {
+      // Calculate average
+      const total = newestMeasurements.reduce((acc, val) => acc + parseFloat(val), 0);
+      const average = (total / newestMeasurements.length).toFixed(2);
+
+      // Save average to state (for external use / UI)
+      setAverage(average);
+
+      // Update main dataset
+      chartInstanceRef.current.data.datasets[0].data = newestMeasurements;
+      chartInstanceRef.current.data.labels = newestMeasurements.map((_, i) => `Meting ${i + 1}`);
+
+      // Update average dataset with a horizontal line
+      chartInstanceRef.current.data.datasets[1].data = Array(newestMeasurements.length).fill(average);
+      chartInstanceRef.current.data.datasets[1].label = `Gemiddelde: ${average ?? 0}cm`;
+
+      chartInstanceRef.current.update();
+    }
+  }, [chartData]);
+
+  // Initialize chart once when canvas is ready
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      console.log("chart average: " + averageMeasurement)
+
+      chartInstanceRef.current = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Meting 1', 'Meting 2', 'Meting 3', 'Meting 4', 'Meting 5'],
+          datasets: [
+            {
+              label: 'Momentopname',
+              data: [],
+              borderWidth: 2,
+              borderColor: '#2596be',
+              tension: 0.3
             },
-            beginAtZero: true
+            {
+              label: 'Gemiddelde',
+              data: [], // fallback if undefined
+              borderWidth: 2,
+              borderDash: [5, 5],
+              borderColor: 'rgb(198, 0, 42)',
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          legend: {
+              labels: {
+                  color: "blue",
+              }
           },
-          x: {
-            title: { display: true, text: 'Metingen (Meest recent)' },
-            grid: {
-                color: 'grey'
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              title: { display: true, text: 'Hoogte (CM)' },
+              beginAtZero: true,
+              grid: { color: 'grey' }
+            },
+            x: {
+              title: { display: true, text: 'Metingen (Meest recent)' },
+              grid: { color: 'grey' }
             }
           }
         }
-      }
     });
 
-    // Cleanup: destroy the chart instance when the component unmounts
     return () => {
-      if (ctx) {
-        // Destroy chart if it's already initialized to prevent memory leaks
-        Chart.getChart(ctx)?.destroy();
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
       }
     };
   }, []);
 
-  return (
-    <div className='w-full h-full'>
-      <canvas ref={canvasRef} id="myChart" className='w-full h-full m-10 mb-0'></canvas>
-    </div>
-  );
+    return (
+      <div className="relative w-full h-96">
+          <canvas ref={canvasRef} className="w-full h-full" />
+      </div>
+    );
+
 });
 
 export default ChartComponent;
