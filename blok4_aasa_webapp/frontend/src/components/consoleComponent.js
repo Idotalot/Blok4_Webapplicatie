@@ -33,7 +33,7 @@ const ConsoleComponent = forwardRef((props, ref) => {
 
             // Programma lijst
             let memePrograms = ["django", "trumpet", "catscream", "focus"];
-            let programList = ["cleanup", "slotmachine", "help", "plant-flag"];
+            let programList = ["cleanup", "slotmachine", "help", "plant-flag", "start-measurement"];
 
             // Programma handling
             if (memePrograms.includes(program) || programList.includes(program)) {
@@ -61,7 +61,13 @@ const ConsoleComponent = forwardRef((props, ref) => {
                     break;
                   case "plant-flag":
                     handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
-                    handleApiSend();
+
+                    handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
+                    break;
+                  case "start-measurement":
+                    handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
+
+                    handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
                     break;
                   default:
                     break;
@@ -179,7 +185,7 @@ const ConsoleComponent = forwardRef((props, ref) => {
         })}
         <div ref={bottomRef}></div>
         <div className="flex flex-row">
-          <p className="text-white font-sourcecode w-24">{"HSTN >>"}</p>
+          <p className="text-white font-sourcecode w-32">{"Houston >>"}</p>
           <input
             id="console-input"
             type="text"

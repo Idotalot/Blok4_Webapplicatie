@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useImperativeHandle } from 'react';
 import useDashboard from "../utils/dashboardHandler";
 import SlotmachineComponent from '../components/slotmachineComponent';
 import ConsoleComponent from '../components/consoleComponent';
@@ -12,7 +12,7 @@ import { sendApiData } from '../utils/apiHandler';
 export default function Dashboard() {
     // Pagina titel & URL dynamisch opstellen op basis van paginanaam
     usePageTitle();
-    const [measurements, setMeasurement] = useState([]);
+    // const [measurements, setMeasurement] = useState([]);
 
     // Refenties defineren
     const chartRef = useRef(null);
@@ -21,71 +21,78 @@ export default function Dashboard() {
 
     const { data, image, messages, sendCommand, inputValue, setInputValue } = useDashboard();
 
+    const [measurementActive, activateMeasurements] = useState(false)
+    const measurementActiveRef = useRef(measurementActive);
+
     // Wordt meteen geïnstantieerd zodra de pagina is ingeladen
     useEffect(() => {
+        if (!measurementActive) return;
+
+        let measurementCount = 0;
+        // measurementActiveRef.current = measurementActive;
+
         consoleRef.current?.addLog('System', 'Attempting to connect with WebSocket', 'warning');
+        consoleRef.current?.setWsStatus('warning');
+
         let connectionFailed = false
 
         // const url = 'ws://145.49.127.248:1880/ws/groep10'
         // Poging doen tot het verbinden met de websocket
         socketRef.current = createWebSocketConnection(
-          (message) => {
-            let measurement = parseFloat(message.proximity_2 / 10).toFixed(2);
-            consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
-            console.log(message)
+            (message) => {
+                let measurement = parseFloat(message.proximity_2 / 10).toFixed(2);
+                consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
+                console.log(message)
 
-            // VERWACHTE RESULTAAT
-            const formattedMeasurement = createMeasurement(measurement)
-            sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
+                // VERWACHTE RESULTAAT
+                const formattedMeasurement = createMeasurement(measurement)
+                sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
 
-            chartRef.current?.addMeasurements(measurement)
-          },
-          () => {
-            console.log('WebSocket connected');
-            consoleRef.current?.addLog('WebSocket', `Connection succesful`, 'success');
-            consoleRef.current?.setWsStatus('success');
-          },
-          (error) => {
-            const url = 'ws://145.49.127.248:1880/ws/groep10'
-            connectionFailed = true
+                chartRef.current?.addMeasurements(measurement)
 
-            console.log("error fetching websocket")
-            consoleRef.current?.addLog('WebSocket', `Could not connect with ${url}`, 'error');
-            consoleRef.current?.setWsStatus('error');
-          },
-          () => {
-            console.log('WebSocket disconnected');
-            console.log(connectionFailed)
-            if (connectionFailed == false) {
-                consoleRef.current?.addLog('WebSocket', `Connection terminated`, 'warning');
-                consoleRef.current?.setWsStatus('warning');
+                measurementCount++
+
+                if (measurementCount == 5) {
+                    activateMeasurements(false);
+                }
+            },
+            () => {
+                console.log('WebSocket connected');
+                consoleRef.current?.addLog('WebSocket', `Connection succesful`, 'success');
+                consoleRef.current?.setWsStatus('success');
+            },
+            (error) => {
+                const url = 'ws://145.49.127.248:1880/ws/groep10'
+                connectionFailed = true
+
+                console.log("error fetching websocket")
+                consoleRef.current?.addLog('WebSocket', `Could not connect with ${url}`, 'error');
+                consoleRef.current?.setWsStatus('error');
+            },
+            () => {
+                console.log('WebSocket disconnected');
+                console.log(connectionFailed)
+                if (connectionFailed == false) {
+                    consoleRef.current?.addLog('WebSocket', `Connection terminated`, 'warning');
+                    consoleRef.current?.setWsStatus('error');
+                }
+                
             }
-            
-          }
         );
-    
+
         return () => {
             if (socketRef.current) {
                 socketRef.current.close();
                 socketRef.current = null;
             }
         };
-    }, []);
-
-    function getRecentMeasurements() {
-        const measurementState = chartRef.current?.showLatestResults();
-        if (measurementState == true) {
-            consoleRef.current?.addLog('System', 'Chart updated succesfully', 'success')
-        } else if (measurementState == false) {
-            consoleRef.current?.addLog('System', 'Not enough data to fill chart', 'error')
-        }
-    }
+    }, [measurementActive]);
 
     function plantFlag() {
         consoleRef.current?.addLog('Houston', 'run plant-flag', 'message')
 
         const url = `http://145.49.127.248:1880/groep10?digital_output_1=255`;
-        const data = {}; // Data is passed via URL query parameters
+        const data = {};
 
         consoleRef.current?.addLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning')
 
@@ -93,10 +100,36 @@ export default function Dashboard() {
             (response) => {
                 console.log(response);
                 consoleRef.current?.addLog(
-                `Satelliet`,
-                `${response.status}`, 
-                "success"
+                    `Satelliet`,
+                    `${response.status}`, 
+                    "success"
                 );
+            },
+            (error) => {
+                console.error('Error sending POST request:', error);
+                consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
+            }
+        );
+    }
+
+    function startMeasurements() {
+        consoleRef.current?.addLog('Houston', 'run start-measurement', 'message')
+        
+        const url = `http://145.49.127.248:1880/groep10?digital_output_1=255`;
+        const data = {};
+
+        consoleRef.current?.addLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning')
+
+        sendApiData(url, data,
+            (response) => {
+                console.log(response);
+                consoleRef.current?.addLog(
+                    `Satelliet`,
+                    `${response.status}`, 
+                    "success"
+                );
+                
+                activateMeasurements(true)
             },
             (error) => {
                 console.error('Error sending POST request:', error);
@@ -132,10 +165,7 @@ export default function Dashboard() {
                         className={`text-3xl ml-8 mt-4 font-bold lg:text-4xl lg:m-8 ${image === '/images/background.png' ? 'text-white' : ''}`}
                     ></h1>
 
-                    <div
-                        id="dashboard"
-                        className="flex-1 bg-center flex items-center justify-center min-h-[24rem] lg:m-32"
-                    >
+                    <div id="dashboard" className="flex-1 bg-center flex items-center justify-center min-h-[24rem] lg:m-32">
                         <div className="h-full flex flex-col lg:flex-row items-center justify-center lg:max-h-[600px] w-full">
                             <div
                                 id="function-panel"
@@ -150,9 +180,15 @@ export default function Dashboard() {
                                 <div className="h-24 flex lg:flex-row items-center justify-center bg-transparent lg:bg-[#060c1c] lg:opacity-85 lg:rounded-2xl">
                                     <button 
                                         onClick={plantFlag} 
-                                        className="p-2 rounded-lg w-max mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
+                                        className="p-2 rounded-lg w-max ml-2 mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
                                     >
                                         Vlag Planten
+                                    </button>
+                                    <button 
+                                        onClick={startMeasurements} 
+                                        className="p-2 rounded-lg w-max mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
+                                    >
+                                        Afstand meten
                                     </button>
                                 </div>
                             </div>
