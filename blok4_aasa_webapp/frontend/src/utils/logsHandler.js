@@ -12,14 +12,12 @@ export default function createMessage(messageSender, message, messageType) {
     const formattedDate = `${year}-${month}-${day}`;
     const formattedTime = `${hours}:${minutes}:${seconds}`;
 
-    const currentTime = `${formattedDate} | ${formattedTime}`;
-
     const newMessage = {
         info: {
-            verstuurder: messageSender,  // Sending message sender
-            tekst: message,              // Sending message content
-            verstuurDatum: formattedDate,  // Date of message
-            verstuurTijd: formattedTime   // Time of message
+            verstuurder: messageSender,
+            tekst: message,
+            verstuurDatum: formattedDate,
+            verstuurTijd: formattedTime
         },
         type: messageType
         

@@ -27,7 +27,7 @@ class BerichtenListView(generics.ListAPIView):
         # Cutoff tijd instellen naar 1 uur geleden
         dateTime = datetime.datetime.now()
 
-        cutoff = dateTime - datetime.timedelta(hours = 12)
+        cutoff = dateTime - datetime.timedelta(hours = 24)
 
         print(f"cutoffDate: {cutoff} ")
 
@@ -37,6 +37,11 @@ class BerichtenListView(generics.ListAPIView):
             if bericht.verstuurDatum <= cutoff.date() and bericht.verstuurTijd <= cutoff.time():
                 bericht.delete()
                 deleted_count += 1
+            elif bericht.verstuurDatum < cutoff.date():
+                bericht.delete()
+                deleted_count += 1
+            else:
+                print("Bericht niet verwijderd")
 
 
         print(f"Deleted {deleted_count} old berichten.")
@@ -62,7 +67,7 @@ class MetingenListView(generics.ListAPIView):
         # Cutoff tijd instellen naar 1 uur geleden
         dateTime = datetime.datetime.now()
 
-        cutoff = dateTime - datetime.timedelta(hours = 12)
+        cutoff = dateTime - datetime.timedelta(hours = 24)
 
         print(f"cutoffDate: {cutoff} ")
 
@@ -72,6 +77,11 @@ class MetingenListView(generics.ListAPIView):
             if meting.meetDatum <= cutoff.date() and meting.meetTijd <= cutoff.time():
                 meting.delete()
                 deleted_count += 1
+            elif meting.meetDatum < cutoff.date():
+                meting.delete()
+                deleted_count += 1
+            else:
+                print("Meting niet verwijderd")
 
 
         print(f"Deleted {deleted_count} old metingen.")

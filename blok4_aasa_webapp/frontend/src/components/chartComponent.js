@@ -26,23 +26,23 @@ const ChartComponent = forwardRef((props, ref) => {
   }));
 
   // Fetch initial data
-  // useEffect(() => {
-  //   fetch('http://localhost:8000/api/metingen/')
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       console.log(data)
-  //       const initialData = data.map(item => item.afstand).slice(0,5);
-  //       setChartData(initialData);
+  useEffect(() => {
+    fetch('http://localhost:8000/api/metingen/')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+        const initialData = data.map(item => item.afstand).slice(0,5);
+        setChartData(initialData);
 
-  //       // If chart is already initialized, update it
-  //       if (chartInstanceRef.current) {
-  //         chartInstanceRef.current.data.datasets[0].data = initialData.reverse();
-  //         chartInstanceRef.current.data.labels = initialData.map((_, i) => `Meting ${i + 1}`);
-  //         chartInstanceRef.current.update();
-  //       }
-  //     })
-  //     .catch(error => console.error('Error fetching measurements:', error));
-  // }, []);
+        // If chart is already initialized, update it
+        if (chartInstanceRef.current) {
+          chartInstanceRef.current.data.datasets[0].data = initialData.reverse();
+          chartInstanceRef.current.data.labels = initialData.map((_, i) => `Meting ${i + 1}`);
+          chartInstanceRef.current.update();
+        }
+      })
+      .catch(error => console.error('Error fetching measurements:', error));
+  }, []);
 
   // Update chart when chartData changes
   useEffect(() => {

@@ -12,7 +12,6 @@ import { sendApiData } from '../utils/apiHandler';
 export default function Dashboard() {
     // Pagina titel & URL dynamisch opstellen op basis van paginanaam
     usePageTitle();
-    // const [measurements, setMeasurement] = useState([]);
 
     // Refenties defineren
     const chartRef = useRef(null);
@@ -22,21 +21,17 @@ export default function Dashboard() {
     const { data, image, messages, sendCommand, inputValue, setInputValue } = useDashboard();
 
     const [measurementActive, activateMeasurements] = useState(false)
-    const measurementActiveRef = useRef(measurementActive);
 
+    let measurementCount = 0;
     // Wordt meteen geïnstantieerd zodra de pagina is ingeladen
     useEffect(() => {
         if (!measurementActive) return;
-
-        let measurementCount = 0;
-        // measurementActiveRef.current = measurementActive;
 
         consoleRef.current?.addLog('System', 'Attempting to connect with WebSocket', 'warning');
         consoleRef.current?.setWsStatus('warning');
 
         let connectionFailed = false
 
-        // const url = 'ws://145.49.127.248:1880/ws/groep10'
         // Poging doen tot het verbinden met de websocket
         socketRef.current = createWebSocketConnection(
             (message) => {
@@ -90,35 +85,43 @@ export default function Dashboard() {
 
     function plantFlag() {
         consoleRef.current?.addLog('Houston', 'run plant-flag', 'message')
+        if (measurementCount >= 5) {
+            const request = 'digital_output_1=255'
+            const url = `http://145.49.127.248:1880/groep10?${request}`;
+            const data = {};
 
-        const url = `http://145.49.127.248:1880/groep10?digital_output_1=255`;
-        const data = {};
+            consoleRef.current?.addLog('System', `Sending POST '${request}' request to http://145.49.127.248:1880/groep10`, 'warning')
 
-        consoleRef.current?.addLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning')
-
-        sendApiData(url, data,
-            (response) => {
-                console.log(response);
-                consoleRef.current?.addLog(
-                    `Satelliet`,
-                    `${response.status}`, 
-                    "success"
-                );
-            },
-            (error) => {
-                console.error('Error sending POST request:', error);
-                consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
-            }
-        );
+            sendApiData(url, data,
+                (response) => {
+                    console.log(response);
+                    consoleRef.current?.addLog(
+                        `Satelliet`,
+                        `${response.status}`, 
+                        "success"
+                    );
+                },
+                (error) => {
+                    console.error('Error sending POST request:', error);
+                    consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
+                }
+            );
+        } else {
+            consoleRef.current?.addLog('System', `Not enough measurements received to plant flag`, 'error')
+        }
+        
     }
 
     function startMeasurements() {
+        measurementCount = 0;
         consoleRef.current?.addLog('Houston', 'run start-measurement', 'message')
         
-        const url = `http://145.49.127.248:1880/groep10?digital_output_1=255`;
+        const request = 'digital_output_1=127'
+        const url = `http://145.49.127.248:1880/groep10?${request}`;
+        console.log(url)
         const data = {};
 
-        consoleRef.current?.addLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning')
+        consoleRef.current?.addLog('System', `Sending POST request '${request}' to http://145.49.127.248:1880/groep10`, 'warning')
 
         sendApiData(url, data,
             (response) => {
