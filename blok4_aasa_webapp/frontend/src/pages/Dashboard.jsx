@@ -18,7 +18,7 @@ export default function Dashboard() {
     const consoleRef = useRef(null);
     const socketRef = useRef(null);
 
-    const { data, image, messages, sendCommand, inputValue, setInputValue } = useDashboard();
+    const { image } = useDashboard();
 
     const [measurementActive, activateMeasurements] = useState(false)
 
@@ -26,6 +26,14 @@ export default function Dashboard() {
     // Wordt meteen geïnstantieerd zodra de pagina is ingeladen
     useEffect(() => {
         if (!measurementActive) return;
+
+        // Timeout na 1 minuut
+        if (measurementActive) {
+            setTimeout(() => {
+                activateMeasurements(false);
+                if (measurementCount > 5) consoleRef.current?.addLog('System', 'Timeout receiving measurements', 'error');
+            }, 60000);
+        }
 
         consoleRef.current?.addLog('System', 'Attempting to connect with WebSocket', 'warning');
         consoleRef.current?.setWsStatus('warning');
@@ -39,14 +47,16 @@ export default function Dashboard() {
                 consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
                 console.log(message)
 
-                // VERWACHTE RESULTAAT
+                // Meting als klasse aangemaakt en opgeslagen als resultaat binnen de database
                 const formattedMeasurement = createMeasurement(measurement)
                 sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
 
                 chartRef.current?.addMeasurements(measurement)
 
+                // Meting teller ophogen
                 measurementCount++
 
+                // Zodra er 5 metingen zijn gemaakt stopt de meting
                 if (measurementCount == 5) {
                     activateMeasurements(false);
                 }
@@ -112,6 +122,7 @@ export default function Dashboard() {
         
     }
 
+    // Metingen starten
     function startMeasurements() {
         measurementCount = 0;
         consoleRef.current?.addLog('Houston', 'run start-measurement', 'message')
@@ -180,17 +191,15 @@ export default function Dashboard() {
                                     />
                                 </div>
 
-                                <div className="h-24 flex lg:flex-row items-center justify-center bg-transparent lg:bg-[#060c1c] lg:opacity-85 lg:rounded-2xl">
+                                <div className="flex h-24 lg:flex-row items-center justify-center bg-transparent lg:bg-[#060c1c] lg:opacity-85 lg:rounded-2xl p-6">
                                     <button 
                                         onClick={plantFlag} 
-                                        className="p-2 rounded-lg w-max ml-2 mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
-                                    >
+                                        className="p-2 rounded-lg mr-4 font-bold text-xl text-white h-full w-full bg-[#c6002a] hover:bg-[#c6002bb4] transition-colors">
                                         Vlag Planten
                                     </button>
                                     <button 
                                         onClick={startMeasurements} 
-                                        className="p-2 rounded-lg w-max mr-2 font-bold text-xl text-white" style={{ backgroundColor: "#c6002a" }}
-                                    >
+                                        className="p-2 rounded-lg font-bold text-xl text-white h-full w-full bg-[#c6002a] hover:bg-[#c6002bb4] transition-colors">
                                         Afstand meten
                                     </button>
                                 </div>

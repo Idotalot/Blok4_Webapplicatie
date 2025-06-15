@@ -44,16 +44,17 @@ export default function Logs() {
                                     </div>
                                 )}
                                 {logs.map((log) => {
+                                    // Ophalen en formateren van datum & tijd per log
                                     const date = new Date(log.verstuurDatum)
                                     const day = String(date.getDate()).padStart(2, '0');
-                                    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
                                     const year = date.getFullYear();
                                     const formattedDate = `${day}-${month}-${year}`;
 
                                     return (
                                         <div key={'log-'+log.berichtID} id={'log-'+log.berichtID} className="grid grid-flow-col grid-cols-6 hover:bg-[#7e93a8]">
                                             <p className="col-span-1 flex items-center justify-center">
-                                                {formattedDate} | {log.verstuurTijd} {console.log(log.verstuurDatum)}
+                                                {formattedDate} | {log.verstuurTijd}
                                             </p>
                                             <p className="col-span-1 flex items-center justify-center">
                                                 {log.verstuurder}

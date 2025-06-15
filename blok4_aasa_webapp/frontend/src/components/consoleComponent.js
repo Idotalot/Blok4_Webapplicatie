@@ -13,7 +13,7 @@ const ConsoleComponent = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     addLog(sender, message, type) {
       handleNewLog(
-        sender,
+        sendehandleNewLogr,
         message,
         type
       )
@@ -26,68 +26,68 @@ const ConsoleComponent = forwardRef((props, ref) => {
 
   const handleKeyDown = (e) => {
       if (e.key === 'Enter') {
-          handleNewLog(`Houston`, `${inputValue}`, "message");
+        handleNewLog(`Houston`, `${inputValue}`, "message");
 
-          if (inputValue.startsWith("run ")) {
-            let program = inputValue.slice(4);
+        if (inputValue.startsWith("run ")) {
+          let program = inputValue.slice(4);
 
-            // Programma lijst
-            let memePrograms = ["django", "trumpet", "catscream", "focus"];
-            let programList = ["cleanup", "slotmachine", "help", "plant-flag", "start-measurement"];
+          // Programma lijst
+          let memePrograms = ["django", "trumpet", "catscream", "focus"];
+          let programList = ["cleanup", "slotmachine", "help", "plant-flag", "start-measurement"];
 
-            // Programma handling
-            if (memePrograms.includes(program) || programList.includes(program)) {
-              if (memePrograms.includes(program)) {
-                handleNewLog("System", `Running ${program}`, "special");
-                easterEgg(program);
-              } else if (programList.includes(program)) {
-                switch (program) {
-                  case "slotmachine":
-                    document.getElementById("slotmachine-modal").classList.remove("hidden");
-                    document.getElementById("slotmachine").classList.remove("hidden");
-                    break;
-                  case "cleanup":
-                    messages.length = 0
-                    break;
-                  case "help":
-                    handleNewLog('', '', 'invalid')
-                    handleNewLog('List Of Programs', '', 'invalid')
-                    programList.forEach(program => {
-                      handleNewLog('==', program, 'invalid' )
-                    })
-                    memePrograms.forEach(program => {
-                      handleNewLog('==', program, 'invalid' )
-                    });
-                    break;
-                  case "plant-flag":
-                    handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
+          // Programma handling
+          if (memePrograms.includes(program) || programList.includes(program)) {
+            if (memePrograms.includes(program)) {
+              handleNewLog("System", `Running ${program}`, "special");
+              easterEgg(program);
+            } else if (programList.includes(program)) {
+              switch (program) {
+                case "slotmachine":
+                  document.getElementById("slotmachine-modal").classList.remove("hidden");
+                  document.getElementById("slotmachine").classList.remove("hidden");
+                  break;
+                case "cleanup":
+                  messages.length = 0
+                  break;
+                case "help":
+                  handleNewLog('', '', 'invalid')
+                  handleNewLog('List Of Programs', '', 'invalid')
+                  programList.forEach(program => {
+                    handleNewLog('==', program, 'invalid' )
+                  })
+                  memePrograms.forEach(program => {
+                    handleNewLog('==', program, 'invalid' )
+                  });
+                  break;
+                case "plant-flag":
+                  handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
 
-                    handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
-                    break;
-                  case "start-measurement":
-                    handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
+                  handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
+                  break;
+                case "start-measurement":
+                  handleNewLog('System', 'Sending POST request to http://145.49.127.248:1880/groep10', 'warning');
 
-                    handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
-                    break;
-                  default:
-                    break;
-                }
-                
-                handleNewLog("System", `Running ${program}`, "success");
+                  handleApiSend('http://145.49.127.248:1880/groep10?digital_output_1=255');
+                  break;
+                default:
+                  break;
               }
-            } else {
-              handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
+              
+              handleNewLog("System", `Running ${program}`, "success");
             }
-          } else if (inputValue.startsWith('post ')) {
-            const postRequest = inputValue.slice(5);
-            const url = `http://145.49.127.248:1880/groep10?${postRequest}`;
-            handleApiSend(url)
-
           } else {
             handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
           }
+        } else if (inputValue.startsWith('post ')) {
+          const postRequest = inputValue.slice(5);
+          const url = `http://145.49.127.248:1880/groep10?${postRequest}`;
+          handleApiSend(url)
 
-          setInputValue(''); // Clear input field
+        } else {
+          handleNewLog("System", `Unknown command "${inputValue}" type "run help" for more information`, "error");
+        }
+
+        setInputValue(''); // Clear input field
       }
   };
 
@@ -165,11 +165,11 @@ const ConsoleComponent = forwardRef((props, ref) => {
           className={`text-3xl animate-pulse ${wsStatus === 'success' ? 'text-green-600' : wsStatus === 'error' ? 'text-red-600' : wsStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'}`}
         />
         <p className='ml-3 text-white'>
-          {wsStatus === 'success' ? 'Connected' : wsStatus === 'error' ? 'Not Connected' : 'Not Connected'}
+          {wsStatus === 'success' ? 'Verbonden' : wsStatus === 'error' ? 'Niet verbonden' : 'Niet verbonden'}
         </p>
       </div>
 
-      <div id="console-panel" className="bg-black flex-1 p-4 rounded-t-2xl lg:rounded-2xl overflow-auto lg:opacity-80 font-sourcecode" style={{scrollbarColor: "#ffffff00"}}>
+      <div id="console-panel" className="bg-black flex-1 p-4 rounded-t-2xl lg:rounded-2xl overflow-auto lg:opacity-80 font-sourcecode">
         {messages.map((message, index) => {
           const colorMap = {
             success: "text-green-500",

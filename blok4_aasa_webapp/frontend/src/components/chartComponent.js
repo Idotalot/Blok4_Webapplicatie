@@ -15,7 +15,7 @@ const ChartComponent = forwardRef((props, ref) => {
   const [chartData, setChartData] = useState([]);
   const [averageMeasurement, setAverage] = useState();
 
-  // Expose functions to parent via ref
+  // Functies die vanuit een ander bestand aangeroepen kunnen worden
   useImperativeHandle(ref, () => ({
     addMeasurements(newMeasurement) {
       setChartData(prev => [...prev, newMeasurement]);
@@ -25,7 +25,7 @@ const ChartComponent = forwardRef((props, ref) => {
     }
   }));
 
-  // Fetch initial data
+  // Tijdens opstart de direct vanuit de backend meetgegevens ophalen
   useEffect(() => {
     fetch('http://localhost:8000/api/metingen/')
       .then(response => response.json())
@@ -34,17 +34,20 @@ const ChartComponent = forwardRef((props, ref) => {
         const initialData = data.map(item => item.afstand).slice(0,5);
         setChartData(initialData);
 
-        // If chart is already initialized, update it
-        if (chartInstanceRef.current) {
-          chartInstanceRef.current.data.datasets[0].data = initialData.reverse();
-          chartInstanceRef.current.data.labels = initialData.map((_, i) => `Meting ${i + 1}`);
-          chartInstanceRef.current.update();
+        // Grafiek updaten zodra deze geïnstantieerd is EN er daadwerkelijk data is
+        if (data != "") {
+          if (chartInstanceRef.current) {
+            chartInstanceRef.current.data.datasets[0].data = initialData.reverse();
+            chartInstanceRef.current.data.labels = initialData.map((_, i) => `Meting ${i + 1}`);
+            chartInstanceRef.current.update();
+          }
         }
+        
       })
       .catch(error => console.error('Error fetching measurements:', error));
   }, []);
 
-  // Update chart when chartData changes
+  // Grafiek updaten zodra er nieuwe meetgegevens ontstaan
   useEffect(() => {
     if (chartData.length === 0) return;
 
@@ -52,18 +55,17 @@ const ChartComponent = forwardRef((props, ref) => {
     console.log('Updating chartData:', newestMeasurements);
 
     if (chartInstanceRef.current) {
-      // Calculate average
+      // Gemiddelde van de laatste 5 metingen berekenen
       const total = newestMeasurements.reduce((acc, val) => acc + parseFloat(val), 0);
       const average = (total / newestMeasurements.length).toFixed(2);
 
-      // Save average to state (for external use / UI)
       setAverage(average);
 
-      // Update main dataset
+      // Daadwerkelijke grafiek updaten met nieuwste dataset
       chartInstanceRef.current.data.datasets[0].data = newestMeasurements;
       chartInstanceRef.current.data.labels = newestMeasurements.map((_, i) => `Meting ${i + 1}`);
 
-      // Update average dataset with a horizontal line
+      // Gemiddelde updaten met nieuwe data
       chartInstanceRef.current.data.datasets[1].data = Array(newestMeasurements.length).fill(average);
       chartInstanceRef.current.data.datasets[1].label = `Gemiddelde: ${average ?? 0}cm`;
 
@@ -95,7 +97,7 @@ const ChartComponent = forwardRef((props, ref) => {
             },
             {
               label: 'Gemiddelde',
-              data: [], // fallback if undefined
+              data: [],
               borderWidth: 2,
               borderDash: [5, 5],
               borderColor: 'rgb(198, 0, 42)',

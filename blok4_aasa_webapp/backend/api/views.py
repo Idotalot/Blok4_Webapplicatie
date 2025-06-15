@@ -5,8 +5,6 @@ from rest_framework import status
 from rest_framework import generics
 from .models import Berichten, Metingen
 from .serializers import BerichtenSerializer, MetingenSerializer
-from datetime import timedelta
-from django.utils import timezone
 import datetime
 
 # Create your views here.
@@ -55,7 +53,7 @@ def create_meting(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    # If validation fails, print the errors
+    # Aanduiden als serializer niet bestaat
     print("Validation failed, errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

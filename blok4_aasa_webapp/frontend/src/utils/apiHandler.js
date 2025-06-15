@@ -3,7 +3,7 @@
 export const sendApiData = async (url, data, onSuccess, onError) => {
     try {
       const response = await fetch(url , {
-        method: 'POST',  // Only POST method is supported
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -14,7 +14,7 @@ export const sendApiData = async (url, data, onSuccess, onError) => {
         throw new Error(`Error: ${response.statusText}`);
       }
   
-      // Wait for responseData
+      // Wachten op ontvangen data
       const responseData = await response.json();
       onSuccess(responseData);
     } catch (error) {

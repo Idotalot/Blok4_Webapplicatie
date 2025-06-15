@@ -2,14 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Firefox-specific */
-#tableBody #console-panel {
-    scrollbar-width: thin;
-    scrollbar-color: #ffffff transparent;
-}
-  
-  /* Webkit browsers (Chrome, Edge, Safari) */
-#tableBody::-webkit-scrollbar {
+#tableBody::-webkit-scrollbar, #console-panel::-webkit-scrollbar {
     width: 8px;
 }
   
@@ -19,6 +12,8 @@
 
 #console-panel::-webkit-scrollbar-track {
     background: transparent;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 #tableBody::-webkit-scrollbar-thumb {
@@ -27,4 +22,9 @@
 
 #console-panel::-webkit-scrollbar-thumb {
     background-color: #6b7280;
+}
+
+#tableBody::-webkit-scrollbar-button, #console-panel::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
 }
