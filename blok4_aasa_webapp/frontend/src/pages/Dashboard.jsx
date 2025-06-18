@@ -21,8 +21,9 @@ export default function Dashboard() {
     const { image } = useDashboard();
 
     const [measurementActive, activateMeasurements] = useState(false)
+    const [measurementCountChecker, setMeasurementCount] = useState(0);
 
-    let measurementCount = 0;
+    // let measurementCount = 0;
     // Wordt meteen geïnstantieerd zodra de pagina is ingeladen
     useEffect(() => {
         if (!measurementActive) return;
@@ -31,7 +32,7 @@ export default function Dashboard() {
         if (measurementActive) {
             setTimeout(() => {
                 activateMeasurements(false);
-                if (measurementCount > 5) consoleRef.current?.addLog('System', 'Timeout receiving measurements', 'error');
+                if (measurementCountChecker > 5) consoleRef.current?.addLog('System', 'Timeout receiving measurements', 'error');
             }, 60000);
         }
 
@@ -43,23 +44,51 @@ export default function Dashboard() {
         // Poging doen tot het verbinden met de websocket
         socketRef.current = createWebSocketConnection(
             (message) => {
+                // let measurement = parseFloat(message.proximity_2 / 10).toFixed(2);
+                // consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
+                // console.log(message)
+
+                // // Meting als klasse aangemaakt en opgeslagen als resultaat binnen de database
+                // const formattedMeasurement = createMeasurement(measurement)
+                // sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
+
+                // chartRef.current?.addMeasurements(measurement)
+
+                // // Meting teller ophogen
+                // measurementCount++
+                // setMeasurementCount(measurementCount)
+
+                // console.log("measurementCount: "+measurementCount)
+                // console.log("measurementCountChecker: "+measurementCountChecker)
+
+                // // Zodra er 5 metingen zijn gemaakt stopt de meting
+                // if (measurementCountChecker == 5) {
+                //     console.log("metingen behaald")
+                //     activateMeasurements(false);
+                // }
+
                 let measurement = parseFloat(message.proximity_2 / 10).toFixed(2);
                 consoleRef.current?.addLog('Lander', JSON.stringify(message), 'message');
-                console.log(message)
+                console.log(message);
 
-                // Meting als klasse aangemaakt en opgeslagen als resultaat binnen de database
-                const formattedMeasurement = createMeasurement(measurement)
+                const formattedMeasurement = createMeasurement(measurement);
                 sendApiData('http://localhost:8000/api/create_meting/', formattedMeasurement.info);
 
-                chartRef.current?.addMeasurements(measurement)
+                chartRef.current?.addMeasurements(measurement);
 
-                // Meting teller ophogen
-                measurementCount++
+                // Update state-based counter
+                setMeasurementCount(prev => {
+                    const newCount = prev + 1;
 
-                // Zodra er 5 metingen zijn gemaakt stopt de meting
-                if (measurementCount == 5) {
-                    activateMeasurements(false);
-                }
+                    if (newCount >= 5) {
+                        console.log("metingen behaald");
+                        activateMeasurements(false);
+                    } else {
+                        console.log("newCount: " + newCount)
+                    }
+
+                    return newCount;
+                });
             },
             () => {
                 console.log('WebSocket connected');
@@ -95,7 +124,8 @@ export default function Dashboard() {
 
     function plantFlag() {
         consoleRef.current?.addLog('Houston', 'run plant-flag', 'message')
-        if (measurementCount >= 5) {
+        console.log("measurements = " + measurementCountChecker)
+        if (measurementCountChecker >= 5) {
             const request = 'digital_output_1=255'
             const url = `http://145.49.127.248:1880/groep10?${request}`;
             const data = {};
@@ -124,7 +154,8 @@ export default function Dashboard() {
 
     // Metingen starten
     function startMeasurements() {
-        measurementCount = 0;
+        // console.log("amount of measurements: " + measurementCount)
+        setMeasurementCount(0);
         consoleRef.current?.addLog('Houston', 'run start-measurement', 'message')
         
         const request = 'digital_output_1=127'
@@ -151,6 +182,34 @@ export default function Dashboard() {
             }
         );
     }
+
+    // function systemReset() {
+    //     setMeasurementCount(0);
+    //     activateMeasurements(false);
+    //     consoleRef.current?.addLog('Houston', 'run system-reset', 'message')
+        
+    //     const request = 'digital_output_1=100'
+    //     const url = `http://145.49.127.248:1880/groep10?${request}`;
+    //     console.log(url)
+    //     const data = {};
+
+    //     consoleRef.current?.addLog('System', `Sending POST request '${request}' to http://145.49.127.248:1880/groep10`, 'warning')
+
+    //     sendApiData(url, data,
+    //         (response) => {
+    //             console.log(response);
+    //             consoleRef.current?.addLog(
+    //                 `Satelliet`,
+    //                 `${response.status}`, 
+    //                 "success"
+    //             );
+    //         },
+    //         (error) => {
+    //             console.error('Error sending POST request:', error);
+    //             consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
+    //         }
+    //     );
+    // }
 
     return (
         <div
@@ -202,6 +261,11 @@ export default function Dashboard() {
                                         className="p-2 rounded-lg font-bold text-xl text-white h-full w-full bg-[#c6002a] hover:bg-[#c6002bb4] transition-colors">
                                         Afstand meten
                                     </button>
+                                    {/* <button 
+                                        onClick={systemReset} 
+                                        className="p-2 rounded-lg ml-4 font-bold text-xl text-white h-full w-full bg-[#c6002a] hover:bg-[#c6002bb4] transition-colors">
+                                        Systeem reset
+                                    </button> */}
                                 </div>
                             </div>
 

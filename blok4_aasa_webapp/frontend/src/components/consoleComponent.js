@@ -13,7 +13,7 @@ const ConsoleComponent = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     addLog(sender, message, type) {
       handleNewLog(
-        sendehandleNewLogr,
+        sender,
         message,
         type
       )
