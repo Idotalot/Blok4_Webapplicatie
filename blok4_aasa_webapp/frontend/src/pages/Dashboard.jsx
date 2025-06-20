@@ -183,34 +183,6 @@ export default function Dashboard() {
         );
     }
 
-    // function systemReset() {
-    //     setMeasurementCount(0);
-    //     activateMeasurements(false);
-    //     consoleRef.current?.addLog('Houston', 'run system-reset', 'message')
-        
-    //     const request = 'digital_output_1=100'
-    //     const url = `http://145.49.127.248:1880/groep10?${request}`;
-    //     console.log(url)
-    //     const data = {};
-
-    //     consoleRef.current?.addLog('System', `Sending POST request '${request}' to http://145.49.127.248:1880/groep10`, 'warning')
-
-    //     sendApiData(url, data,
-    //         (response) => {
-    //             console.log(response);
-    //             consoleRef.current?.addLog(
-    //                 `Satelliet`,
-    //                 `${response.status}`, 
-    //                 "success"
-    //             );
-    //         },
-    //         (error) => {
-    //             console.error('Error sending POST request:', error);
-    //             consoleRef.current?.addLog('API', 'Failed to send POST request', "error");
-    //         }
-    //     );
-    // }
-
     return (
         <div
             style={{
